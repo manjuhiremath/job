@@ -1,12 +1,10 @@
 import React from 'react';
-import Button from '@mui/material/Button';
+import { Dashboard } from './dashboard/main';
 
 function App() {
   return (
     <div style={{ textAlign: 'center', marginTop: '50px' }}>
-      <Button variant="contained" color="primary">
-        Test Material-UI Button
-      </Button>
+      <Dashboard/>
     </div>
   );
 }

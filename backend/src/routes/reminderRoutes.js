@@ -1,12 +1,13 @@
 import express from 'express';
 import { createReminder, deleteReminder, getReminders, updateReminder } from '../controllers/reminderController.js';
+import { authenticateUser } from '../middleware/auth.js';
 
-const reminderRouter = express.Router();
+const router = express.Router();
 
-reminderRouter.post('/', createReminder);
-reminderRouter.get('/:userId', getReminders);
-reminderRouter.put('/:id', updateReminder);
-reminderRouter.delete('/:id', deleteReminder);
+router.post('/', authenticateUser,createReminder);
+router.get('/:userId', authenticateUser,getReminders);
+router.put('/:id', authenticateUser,updateReminder);
+router.delete('/:id', authenticateUser,deleteReminder);
 
-export { reminderRouter };
+export default router;
 

@@ -1,11 +1,12 @@
-import controller, { createCompany, deleteCompany, getCompanies, updateCompany } from '../controllers/companyController';
+import { createCompany, deleteCompany, getCompanies, updateCompany } from '../controllers/companyController.js';
 import express from 'express';
+import { authenticateUser } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.post('/', createCompany);
-router.get('/:userId', getCompanies);
-router.put('/:id', updateCompany);
-router.delete('/:id', deleteCompany);
+router.post('/', authenticateUser,createCompany);
+router.get('/:userId', authenticateUser,getCompanies);
+router.put('/:id', authenticateUser,updateCompany);
+router.delete('/:id', authenticateUser,deleteCompany);
 
 export default router;
