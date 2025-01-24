@@ -14,6 +14,6 @@ const Company = sequelize.define('Company', {
 
 
 
-sequelize.sync(); // CAUTION: This deletes all data in development.
+sequelize.sync(); 
 
 export default Company;

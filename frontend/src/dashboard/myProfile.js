@@ -1,27 +1,71 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Typography, Button, TextField, Box } from '@mui/material';
 import Container from '@mui/material/Container';
+import { getToken } from '../api/baseurl';
+import { getProfile, putProfile } from '../api/api';
 
 export const MyProfile = () => {
-    const [isEditing, setIsEditing] = useState(false); // Toggle between view and edit mode
+    const [isEditing, setIsEditing] = useState(false); 
     const [userDetails, setUserDetails] = useState({
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        password: '********',
-        careerGoals: 'To become a software architect and lead impactful projects.',
+        name: '',
+        email: '',
+        careerGoals: ''
     });
 
-    const [formValues, setFormValues] = useState({ ...userDetails });
+    const [formValues, setFormValues] = useState({
+        name: '',
+        email: '',
+        careerGoals: ''
+    });
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormValues({ ...formValues, [name]: value });
     };
 
-    const handleSave = () => {
-        setUserDetails({ ...formValues });
-        setIsEditing(false);
+    const handleSave = async () => {
+        try {
+            const payload = {
+                name: formValues.name,
+                email: formValues.email,
+                careerGoals: formValues.careerGoals,
+            };
+
+            const token = getToken();
+            await putProfile(payload, token);
+            setUserDetails({ ...formValues }); 
+            setIsEditing(false); 
+
+            console.log('Profile updated successfully.');
+        } catch (error) {
+            console.error('Error updating profile:', error);
+        }
     };
+
+    const getProfiledetails = async () => {
+        try {
+            if (getToken()) {
+                const resp = await getProfile(getToken());
+                setUserDetails({
+                    name: resp?.data?.user?.name,
+                    email: resp?.data?.user?.email,
+                    careerGoals: resp?.data?.user?.careerGoals,
+                });
+
+                setFormValues({
+                    name: resp?.data?.user?.name,
+                    email: resp?.data?.user?.email,
+                    careerGoals: resp?.data?.user?.careerGoals,
+                });
+            }
+        } catch (err) {
+            console.error('Error fetching profile details:', err);
+        }
+    };
+
+    useEffect(() => {
+        getProfiledetails();
+    }, []);
 
     return (
         <Container maxWidth="md" style={{ marginTop: '50px' }}>
@@ -30,8 +74,7 @@ export const MyProfile = () => {
             </Typography>
 
             {isEditing ? (
-                // Edit View
-                <Box component="form" className='' noValidate autoComplete="off">
+                <Box component="form" noValidate autoComplete="off">
                     <TextField
                         label="Name"
                         name="name"
@@ -50,16 +93,6 @@ export const MyProfile = () => {
                         margin="normal"
                         variant="outlined"
                         type="email"
-                    />
-                    <TextField
-                        label="Password"
-                        name="password"
-                        value={formValues.password}
-                        onChange={handleInputChange}
-                        fullWidth
-                        margin="normal"
-                        variant="outlined"
-                        type="password"
                     />
                     <TextField
                         label="Career Goals"
@@ -82,16 +115,12 @@ export const MyProfile = () => {
                     </Box>
                 </Box>
             ) : (
-                // View Mode
                 <Box>
                     <Typography variant="body1" gutterBottom>
                         <strong>Name:</strong> {userDetails.name}
                     </Typography>
                     <Typography variant="body1" gutterBottom>
                         <strong>Email:</strong> {userDetails.email}
-                    </Typography>
-                    <Typography variant="body1" gutterBottom>
-                        <strong>Password:</strong> {userDetails.password}
                     </Typography>
                     <Typography variant="body1" gutterBottom>
                         <strong>Career Goals:</strong> {userDetails.careerGoals}

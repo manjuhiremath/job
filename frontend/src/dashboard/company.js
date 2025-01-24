@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Typography,
     Container,
@@ -14,12 +14,12 @@ import {
     Modal,
     Paper,
 } from '@mui/material';
+import { getToken } from '../api/baseurl';
+import { deleteCompany, getCompany, postCompany, putCompany } from '../api/api';
+import { green } from '@mui/material/colors';
 
 const Company = () => {
-    const [companies, setCompanies] = useState([
-        { id: 1, name: 'TechCorp', contactDetails: '123-456-7890', industry: 'Technology', companySize: '500', notes: 'Leading in AI.' },
-        { id: 2, name: 'HealthPlus', contactDetails: '987-654-3210', industry: 'Healthcare', companySize: '200', notes: 'Innovative health solutions.' },
-    ]);
+    const [companies, setCompanies] = useState([]);
 
     const [editingCompanyId, setEditingCompanyId] = useState(null);
     const [newCompany, setNewCompany] = useState({
@@ -38,31 +38,111 @@ const Company = () => {
         );
     };
 
-    const handleSaveEdit = () => {
-        setEditingCompanyId(null);
+    const handleSaveEdit = async () => {
+        try {
+            if (editingCompanyId) {
+                const updatedCompany = companies.find((company) => company.id === editingCompanyId);
+
+                if (!updatedCompany) {
+                    console.error("Job not found.");
+                    return;
+                }
+
+                const token = getToken();
+                await putCompany(editingCompanyId, updatedCompany, token);
+                console.log(`Job with ID ${editingCompanyId} updated successfully.`);
+            }
+
+            setEditingCompanyId(null);
+        } catch (error) {
+            console.error(`Error saving job with ID ${editingCompanyId}:`, error);
+        }
     };
 
-    const handleAddCompany = () => {
-        setCompanies((prev) => [
-            ...prev,
-            { ...newCompany, id: prev.length ? prev[prev.length - 1].id + 1 : 1 },
-        ]);
-        setNewCompany({ name: '', contactDetails: '', industry: '', companySize: '', notes: '' });
-        setOpenModal(false);
+    const handleAddCompany = async () => {
+        try {
+            const id = localStorage.getItem('userId');
+            console.log(id)
+            const payload = {
+                name: newCompany.name,
+                contactDetails: newCompany.contactDetails,
+                industry: newCompany.industry,
+                companySize: newCompany.companySize,
+                notes: newCompany.notes,
+                userId: id
+            }
+            await postCompany(payload, getToken()).then((resp) => {
+                console.log(resp)
+            }).catch((err) => {
+                console.log(err);
+            })
+            setNewCompany({ name: '', contactDetails: '', industry: '', companySize: '', notes: '' });
+            setOpenModal(false);
+            await getCompanydetails();
+        } catch (error) {
+            console.log(error)
+        }
+
     };
+
+    const handleDeleteCompany = async (id) => {
+        try {
+            const token = getToken();
+            await deleteCompany(id, token).then((resp) => {
+                console.log(resp);
+            }).catch((err) => {
+                console.log(err);
+            })
+            await getCompanydetails();
+        } catch (error) {
+
+        }
+    };
+
+    const getCompanydetails = async () => {
+        try {
+            const token = getToken();
+            if (token) {
+                const response = await getCompany(token);
+                const companyData = response?.data || [];
+
+                const formattedCompanies = companyData.map((company) => ({
+                    id: company.id,
+                    name: company.name,
+                    contactDetails: company.contactDetails,
+                    industry: company.industry,
+                    companySize: company.companySize,
+                    notes: company.notes,
+                }));
+
+                setCompanies(formattedCompanies);
+            }
+        } catch (err) {
+            console.error("Error fetching company details:", err);
+        }
+    };
+
+    useEffect(() => {
+        getCompanydetails();
+    }, []);
 
     return (
-        <Container maxWidth="md" style={{ marginTop: '50px' }}>
+        <Container maxWidth="lg" style={{ marginTop: '50px' }}>
             <Typography variant="h4" gutterBottom>
                 Company
             </Typography>
-            <Button variant="contained" color="primary" onClick={() => setOpenModal(true)} style={{ marginBottom: '20px' }}>
+            <Button
+                variant="contained"
+                color="primary"
+                onClick={() => setOpenModal(true)}
+                style={{ marginBottom: '20px' }}
+            >
                 Add Company
             </Button>
             <TableContainer component={Paper}>
                 <Table>
                     <TableHead>
-                        <TableRow>
+                        <TableRow style={{ backgroundColor: '#A888B5' }}>
                             <TableCell>Name</TableCell>
                             <TableCell>Contact Details</TableCell>
                             <TableCell>Industry</TableCell>
@@ -88,10 +168,11 @@ const Company = () => {
                                         )}
                                     </TableCell>
                                 ))}
-                                <TableCell>
+                                <TableCell >
+                                    <div className='flex'>
                                     {editingCompanyId === company.id ? (
                                         <Button
-                                            variant="contained"
+                                            variant="text"
                                             color="primary"
                                             onClick={handleSaveEdit}
                                         >
@@ -99,13 +180,22 @@ const Company = () => {
                                         </Button>
                                     ) : (
                                         <Button
-                                            variant="outlined"
+                                            variant="text"
                                             color="secondary"
                                             onClick={() => setEditingCompanyId(company.id)}
                                         >
                                             Edit
                                         </Button>
                                     )}
+                                    <Button
+                                        variant="text"
+                                        color="error"
+                                        onClick={() => handleDeleteCompany(company.id)}
+                                        style={{ marginLeft: '10px' }}
+                                    >
+                                        Delete
+                                    </Button>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -157,3 +247,4 @@ const Company = () => {
 };
 
 export default Company;
+

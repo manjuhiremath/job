@@ -23,8 +23,6 @@ Company.belongsTo(User, { foreignKey: { id: 'userId', allowNull: true }, onDelet
 
 User.hasMany(Job, { foreignKey: "userId" });
 Job.belongsTo(User, { foreignKey: "userId" });
-User.hasMany(Reminder, { foreignKey: "userId" });
-Reminder.belongsTo(User, { foreignKey: "userId" });
 
 app.use(bodyParser.json());
 app.use('/api', routes);

@@ -4,7 +4,8 @@ import Company from "../models/Company.js";
 export const createCompany = async (req, res) => {
   try {
     const { name, contactDetails, industry, companySize, notes, userId } = req.body;
-    const company = await Company.create({ name, contactDetails, industry, companySize, notes, userId });
+    console.log(userId)
+    const company = await Company.create({ name, contactDetails, industry, companySize, notes, UserId : userId });
     res.status(201).json(company);
   } catch (error) {
     res.status(500).json({ error: 'Failed to create company' });
@@ -13,8 +14,8 @@ export const createCompany = async (req, res) => {
 
 export const getCompanies = async (req, res) => {
   try {
-    const { userId } = req.params;
-    const companies = await Company.findAll({ where: { userId } });
+    const id = req.user;
+    const companies = await Company.findAll({ where: { UserId:id } });
     res.status(200).json(companies);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch companies' });

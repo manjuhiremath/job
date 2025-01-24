@@ -7,8 +7,9 @@ const Reminder = sequelize.define('Reminder', {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4, primaryKey: true
   },
-  jobId: { type: DataTypes.INTEGER, allowNull: false },
-  reminderDate: { type: DataTypes.DATEONLY, allowNull: false },
+  sendAt: { type: DataTypes.STRING, allowNull: false },
+  message:{type:DataTypes.STRING,allowNull:false},
+  email:{type:DataTypes.STRING,allowNull:false}
 }, { timestamps: true,tableName: 'reminder' });
 
 

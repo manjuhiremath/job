@@ -1,27 +1,57 @@
 import React, { useState } from 'react';
-import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import { registerUser } from '../api/api';
+import { Container, Typography, Button, TextField, Box, Card } from '@mui/material';
+import { loginUser, registerUser } from '../api/api';
 
 const Login = () => {
-    const [isLogin, setIsLogin] = useState(true); // Toggle between login and signup forms
-    const handleClick = ()=>{
-        try{
-            payload = {
-                
-            }
-            registerUser()
-        }catch(err){
-            console.log(err)
+    const [isLogin, setIsLogin] = useState(true);
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [careerGoals, setCareerGoals] = useState('');
+    const [error, setError] = useState('');
+    const [isLoggedIn,setIsLoggedIn] = useState(false);
+    const handleSignupSubmit = async (event) => {
+        event.preventDefault();
+        if (!name || !email || !password || !careerGoals) {
+            setError('All fields are required');
+            return;
         }
-    }
+        try {
+            const payload = { name, email, password, careerGoals };
+            await registerUser(payload);
+            console.log('User registered successfully');
+        } catch (err) {
+            console.error(err);
+            setError('Registration failed. Please try again.');
+        }
+    };
+
+    const handleLoginSubmit = async(event) => {
+        event.preventDefault();
+        if (!email || !password) {
+            setError('All fields are required');
+            return;
+        }
+        try {
+            const payload = { email, password};
+            await loginUser(payload).then((resp)=>{
+                console.log(resp)
+                localStorage.setItem('token', resp?.data?.token);
+                localStorage.setItem('userId', resp?.data?.userId);
+                setIsLoggedIn(true);
+                window.location.reload();
+            }).catch((err)=>{
+                console.log(err);
+            })
+        } catch (err) {
+            console.error(err);
+            setError('Registration failed. Please try again.');
+        }
+    };
+
     return (
-        <Card maxWidth="xs" className='p-5 w-96 border' style={{ marginTop: '200px' }}>
-            <Typography variant="h4" color="initial" align="center" gutterBottom>
+        <Card className="p-5 w-96 border" style={{ marginTop: '200px' }}>
+            <Typography variant="h4" align="center" gutterBottom>
                 {isLogin ? 'Login' : 'Signup'}
             </Typography>
 
@@ -44,8 +74,7 @@ const Login = () => {
             </Box>
 
             {isLogin ? (
-                // Login Form
-                <form>
+                <form onSubmit={handleLoginSubmit}>
                     <TextField
                         label="Email"
                         type="email"
@@ -53,6 +82,7 @@ const Login = () => {
                         required
                         margin="normal"
                         variant="outlined"
+                        onChange={(e) => setEmail(e.target.value)}
                     />
                     <TextField
                         label="Password"
@@ -61,6 +91,7 @@ const Login = () => {
                         required
                         margin="normal"
                         variant="outlined"
+                        onChange={(e) => setPassword(e.target.value)}
                     />
                     <Box display="flex" justifyContent="center" marginTop="20px">
                         <Button type="submit" variant="contained" color="primary">
@@ -69,8 +100,7 @@ const Login = () => {
                     </Box>
                 </form>
             ) : (
-                // Signup Form
-                <form>
+                <form onSubmit={handleSignupSubmit}>
                     <TextField
                         label="Name"
                         type="text"
@@ -78,6 +108,7 @@ const Login = () => {
                         required
                         margin="normal"
                         variant="outlined"
+                        onChange={(e) => setName(e.target.value)}
                     />
                     <TextField
                         label="Email"
@@ -86,6 +117,7 @@ const Login = () => {
                         required
                         margin="normal"
                         variant="outlined"
+                        onChange={(e) => setEmail(e.target.value)}
                     />
                     <TextField
                         label="Password"
@@ -94,6 +126,7 @@ const Login = () => {
                         required
                         margin="normal"
                         variant="outlined"
+                        onChange={(e) => setPassword(e.target.value)}
                     />
                     <TextField
                         label="Career Goals"
@@ -104,9 +137,11 @@ const Login = () => {
                         variant="outlined"
                         multiline
                         rows={3}
+                        onChange={(e) => setCareerGoals(e.target.value)}
                     />
+                    {error && <Typography color="error">{error}</Typography>}
                     <Box display="flex" justifyContent="center" marginTop="20px">
-                        <Button type="submit" onClick={handleClick} variant="contained" color="primary">
+                        <Button type="submit" variant="contained" color="primary">
                             Signup
                         </Button>
                     </Box>

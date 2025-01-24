@@ -1,42 +1,67 @@
 import Reminder from "../models/Reminder.js";
+import {CronJob } from 'cron';
+import nodemailer from 'nodemailer';
 
-export const createReminder = async (req, res) => {
-    try {
-        const { jobId, userId, reminderDate, notes } = req.body;
-        const reminder = await Reminder.create({ jobId, userId, reminderDate, notes });
-        res.status(201).json(reminder);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to create reminder' });
-    }
-};
 
-export const getReminders = async (req, res) => {
+const transporter = nodemailer.createTransport({
+    service: 'gmail', 
+    auth: {
+      user: "chandrasekharkarampudi123@gmail.com", 
+      pass: "ndyn ezrj mplz qzps",
+    },
+  });
+  
+  const sendEmail = (to, subject, text) => {
+    const mailOptions = {
+      from: 'chandrasekharkarampudi123@gmail.com',
+      to,
+      subject,
+      text,
+    };
+  
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error('Error sending email:', error);
+      } else {
+        console.log('Email sent:', info.response);
+      }
+    });
+  };
+  
+  const getCronExpression = (dateString) => {
+    const dt = new Date(dateString); 
+    const minute = dt.getMinutes();
+    const hour = dt.getHours();
+    const day = dt.getDate();
+    const month = dt.getMonth() + 1; 
+    return `${minute} ${hour} ${day} ${month} *`;
+  };
+  
+  export const createReminder = async (req, res) => {
     try {
-        const { userId } = req.params;
-        const reminders = await Reminder.findAll({ where: { userId } });
-        res.status(200).json(reminders);
+      const { email, sendAt, message } = req.body;
+  
+      if (!sendAt || isNaN(new Date(sendAt).getTime())) {
+        return res.status(400).json({ error: 'Invalid date' });
+      }
+  
+      const reminder = await Reminder.create({ email, sendAt, message });
+  
+      const cronExpression = getCronExpression(sendAt);
+      console.log(cronExpression)
+  
+      const job = new CronJob(cronExpression, () => {
+        sendEmail(email, 'Reminder', message);
+      });
+  
+      job.start();
+      console.log(`Scheduled reminder for ${sendAt}`);
+  
+      res.status(201).json(reminder);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch reminders' });
+      console.error('Error creating reminder:', error);
+      res.status(500).json({ error: 'Failed to create reminder' });
     }
-};
+  };
 
-export const updateReminder = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { reminderDate, notes } = req.body;
-        const reminder = await Reminder.update({ reminderDate, notes }, { where: { id } });
-        res.status(200).json({ message: 'Reminder updated', reminder });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to update reminder' });
-    }
-};
 
-export const deleteReminder = async (req, res) => {
-    try {
-        const { id } = req.params;
-        await Reminder.destroy({ where: { id } });
-        res.status(200).json({ message: 'Reminder deleted' });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to delete reminder' });
-    }
-};

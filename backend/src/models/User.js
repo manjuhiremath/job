@@ -7,6 +7,7 @@ const User = sequelize.define('User', {
   password: { type: DataTypes.STRING, allowNull: false },
   name: { type: DataTypes.STRING, allowNull: false },
   careerGoals: { type: DataTypes.TEXT },
+  
 }, { timestamps: true,tableName: 'users' });
 
 sequelize.sync();

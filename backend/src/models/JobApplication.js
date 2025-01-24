@@ -12,7 +12,7 @@ const Job = sequelize.define('Job', {
   applicationDate: { type: DataTypes.DATE, allowNull: false },
   status: { type: DataTypes.STRING, allowNull: false },
   notes: { type: DataTypes.TEXT },
-  // userId: { type: DataTypes.INTEGER, allowNull: false },
+  fileUrl: {type:DataTypes.STRING}
 }, { timestamps: true, tableName: 'job' });
 
 
